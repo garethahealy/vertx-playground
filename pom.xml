@@ -21,4 +21,8 @@
         <url>https://github.com/garethahealy/vertx-playground/tree/master</url>
     </scm>
 
+    <modules>
+        <module>workshop</module>
+    </modules>
+
 </project>

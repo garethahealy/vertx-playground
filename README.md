@@ -3,3 +3,4 @@
 
 # vertx-playground
 - http://escoffier.me/vertx-hol
+- https://github.com/cescoffier/vertx-microservices-workshop
