@@ -47,7 +47,15 @@ public class AuditVerticle extends RxMicroServiceVerticle {
 
     // TODO
     // ----
-    Single<MessageConsumer<JsonObject>> readySingle = Single.error(new UnsupportedOperationException("not yet implemented"));
+    Single<Void> databaseReady = initializeDatabase(config().getBoolean("drop", false));
+    Single<Void> httpEndpointReady = configureTheHTTPServer()
+        .flatMap(server -> rxPublishHttpEndpoint("audit", "localhost", server.actualPort()));
+    Single<MessageConsumer<JsonObject>> messageConsumerReady = retrieveThePortfolioMessageSource();
+    Single<MessageConsumer<JsonObject>> readySingle = Single.zip(
+        databaseReady,
+        httpEndpointReady,
+        messageConsumerReady,
+        (db, http, consumer) -> consumer);
     // ----
 
     readySingle.doOnSuccess(consumer -> {
@@ -83,13 +91,16 @@ public class AuditVerticle extends RxMicroServiceVerticle {
   }
 
   private Single<HttpServer> configureTheHTTPServer() {
-
     //TODO
     //----
-    Single<HttpServer> httpServerSingle = Single.error(new UnsupportedOperationException("not yet implemented"));
-    //----
+    // Use a Vert.x Web router for this REST API.
+    Router router = Router.router(vertx);
+    router.get("/").handler(this::retrieveOperations);
 
-    return httpServerSingle;
+    return vertx.createHttpServer()
+        .requestHandler(router::accept)
+        .rxListen(config().getInteger("http.port", 0));
+    //----
   }
 
   private Single<MessageConsumer<JsonObject>> retrieveThePortfolioMessageSource() {
